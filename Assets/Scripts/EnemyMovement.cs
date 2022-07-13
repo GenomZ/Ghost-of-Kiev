@@ -6,9 +6,9 @@ public class EnemyMovement : MonoBehaviour
 {
     public int enemySpeed;
     public Rigidbody2D rb;
-    private Vector2 playerPosition;
+    private Vector3 playerPosition;
     private Transform target;
-    private Vector2 _direction;
+    private Vector3 _direction;
     public float turnSpeed;
 
     void Awake()
@@ -31,13 +31,10 @@ public class EnemyMovement : MonoBehaviour
     {
         if (target)
         {
-            var v2 = new Vector2(target.position.x, target.position.y);
-            _direction = v2 - rb.position;
+            _direction = playerPosition - rb.transform.position;
             _direction.Normalize();
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(_direction), turnSpeed * Time.deltaTime);
+            //transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(_direction), turnSpeed * Time.deltaTime);
         }
-
-        playerPosition = new Vector2(target.position.x, target.position.y).normalized;
 
         //var localPosition = _mPlayer.transform.position - transform.position;
         //localPosition = localPosition.normalized;
@@ -53,10 +50,24 @@ public class EnemyMovement : MonoBehaviour
     private void Move()
     {
         rb.AddForce(_direction * enemySpeed);
-        //rb.velocity = new Vector2(playerPosition.x * enemySpeed * -1, playerPosition.y * enemySpeed * -1);
-        Vector2 aimDirection = playerPosition - rb.position;
+
+        Vector3 aimDirection = playerPosition - rb.transform.position;
         float aimAngle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg - 90f;
-        rb.rotation = aimAngle;
+        rb.transform.rotation = Quaternion.AngleAxis(aimAngle, Vector3.forward);
+
     }
-   
+
+    protected void LookAt(Vector2 point)
+    {
+
+        float angle = AngleBetweenPoints(transform.position, point);
+        var targetRotation = Quaternion.Euler(new Vector3(0f, 0f, angle));
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime);
+
+    }
+    float AngleBetweenPoints(Vector2 a, Vector2 b)
+    {
+        return Mathf.Atan2(a.y - b.y, a.x - b.x) * Mathf.Rad2Deg;
+    }
+
 }
